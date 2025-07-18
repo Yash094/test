@@ -1,100 +1,80 @@
 "use client";
 
-import Image from "next/image";
-import { ConnectButton } from "thirdweb/react";
-import thirdwebIcon from "@public/thirdweb.svg";
+import React from "react";
+import { useActiveAccount, useConnect } from "thirdweb/react";
 import { client } from "./client";
+import { polygon } from "thirdweb/chains";
+import {  inAppWallet } from "thirdweb/wallets";
 
-export default function Home() {
+export default function Login() {
+  const account = useActiveAccount();
+  const { connect, isConnecting, error } = useConnect({
+    accountAbstraction: {
+      chain: polygon,
+      sponsorGas: true,
+    },
+    client: client,
+  });
+  
+  console.log(account);
+
+  const handleConnect = () => {
+    connect(async () => {
+      // Create wallet
+      const wallet = inAppWallet();
+      
+      // Connect wallet
+      await wallet.connect({
+        client,
+        chain: polygon,
+        strategy: "google"
+      });
+      
+      // Return the wallet
+      return wallet;
+    });
+  };
+ 
   return (
     <main className="p-4 pb-10 min-h-[100vh] flex items-center justify-center container max-w-screen-lg mx-auto">
-      <div className="py-20">
-        <Header />
+      <div className="py-20 w-full max-w-md mx-auto">
+        <div className="flex flex-col items-center gap-6">
+          <h1 className="text-3xl font-bold text-center mb-8">Welcome</h1>
+          <p className="text-center text-gray-600 mb-8">
+            Connect your wallet with MetaMask
+          </p>
+          
+          <div className="w-full max-w-sm">
+            {error && (
+              <p className="text-red-500 text-sm mb-4 text-center">{error.message || String(error)}</p>
+            )}
+            
+            <button
+              onClick={handleConnect}
+              disabled={isConnecting}
+              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-md transition-colors flex items-center justify-center gap-3"
+            >
+              {isConnecting ? (
+                "Connecting..."
+              ) : (
+                <>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M21.49 13.16c-.71-.47-1.65-.47-2.36 0l-1.89 1.26V7.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v6.92l-1.89-1.26c-.71-.47-1.65-.47-2.36 0-.71.47-.71 1.34 0 1.81l4.5 3c.71.47 1.65.47 2.36 0l4.5-3c.71-.47.71-1.34 0-1.81z"/>
+                  </svg>
+                  Connect
+                </>
+              )}
+            </button>
+            {account && (
+              <div className="mt-4 text-center text-sm text-black">
+                Connected: {account.address}
+              </div>
+            )}
 
-        <div className="flex justify-center mb-20">
-          <ConnectButton
-            client={client}
-            appMetadata={{
-              name: "Example App",
-              url: "https://example.com",
-            }}
-          />
+            
+          </div>
         </div>
-
-        <ThirdwebResources />
       </div>
     </main>
   );
-}
-
-function Header() {
-  return (
-    <header className="flex flex-col items-center mb-20 md:mb-20">
-      <Image
-        src={thirdwebIcon}
-        alt=""
-        className="size-[150px] md:size-[150px]"
-        style={{
-          filter: "drop-shadow(0px 0px 24px #a726a9a8)",
-        }}
-      />
-
-      <h1 className="text-2xl md:text-6xl font-semibold md:font-bold tracking-tighter mb-6 text-zinc-100">
-        thirdweb SDK
-        <span className="text-zinc-300 inline-block mx-1"> + </span>
-        <span className="inline-block -skew-x-6 text-blue-500"> Next.js </span>
-      </h1>
-
-      <p className="text-zinc-300 text-base">
-        Read the{" "}
-        <code className="bg-zinc-800 text-zinc-300 px-2 rounded py-1 text-sm mx-1">
-          README.md
-        </code>{" "}
-        file to get started.
-      </p>
-    </header>
-  );
-}
-
-function ThirdwebResources() {
-  return (
-    <div className="grid gap-4 lg:grid-cols-3 justify-center">
-      <ArticleCard
-        title="thirdweb SDK Docs"
-        href="https://portal.thirdweb.com/typescript/v5"
-        description="thirdweb TypeScript SDK documentation"
-      />
-
-      <ArticleCard
-        title="Components and Hooks"
-        href="https://portal.thirdweb.com/typescript/v5/react"
-        description="Learn about the thirdweb React components and hooks in thirdweb SDK"
-      />
-
-      <ArticleCard
-        title="thirdweb Dashboard"
-        href="https://thirdweb.com/dashboard"
-        description="Deploy, configure, and manage your smart contracts from the dashboard."
-      />
-    </div>
-  );
-}
-
-function ArticleCard(props: {
-  title: string;
-  href: string;
-  description: string;
-}) {
-  return (
-    <a
-      href={props.href + "?utm_source=next-template"}
-      target="_blank"
-      className="flex flex-col border border-zinc-800 p-4 rounded-lg hover:bg-zinc-900 transition-colors hover:border-zinc-700"
-    >
-      <article>
-        <h2 className="text-lg font-semibold mb-2">{props.title}</h2>
-        <p className="text-sm text-zinc-400">{props.description}</p>
-      </article>
-    </a>
-  );
-}
+} 
